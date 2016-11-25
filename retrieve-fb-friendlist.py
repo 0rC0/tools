@@ -9,6 +9,7 @@ from selenium import webdriver
 import getpass
 from time import sleep
 from bs4 import BeautifulSoup as bs
+import json
 
 friends_url = 'https://www.facebook.com/me/friends'
 output_file = 'fb_friends.txt'
@@ -41,9 +42,18 @@ while True:
 soup = bs(b.page_source, 'html5lib')
 b.quit()
 
-with open(output_file, 'w') as f:
+friends = []
+for friend in soup.find_all('div', {'class': 'fsl fwb fcb'}):
+    curr_friend = dict()
+    curr_friend['name'] = friend.text
+    tmp = friend.find('a')['href']
+    if 'https://www.facebook.com/profile.php?id=' in tmp:
+        curr_friend['id'] = tmp[40:].split('&')[0]
+        curr_friend['url'] = tmp.split('&')[0]
+    else:
+        curr_friend['nick'] = tmp[25:].split('?')[0]
+        curr_friend['url'] = tmp.split('?')[0]
+    friends.append(curr_friend)
 
-    #friends = []
-    for friend in soup.find_all('div', {'class':'fsl fwb fcb'}):
-        #friends.append(friend.text)
-        f.write(friend.text)
+with open(output_file, 'w') as f:
+    json.dump(friends,f)
