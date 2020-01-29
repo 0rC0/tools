@@ -1,0 +1,37 @@
+#!/bin/bash
+
+### Find all Niftis in directory subtree and compress them as .nii.gz
+
+# Directories to ignore
+ignore_dirs=( '00_MRIConvert/'
+              '00_mricron_viewer/')
+
+dirs=($(ls -1d */))
+
+function do_the_job {
+  local d=$1
+  echo  "$d"
+  cd "$d"
+  echo "finding niftis in $d"
+  for i in `find . -iname '*.nii'`
+  do
+    echo "Compressing $i \n"
+    gzip "$i"
+    echo "ls $i*"
+  done
+  cd ..
+}
+
+N=4;
+for dir in ${dirs[@]}
+do
+  if [[ ! ${ignore_dirs[@]} =~ "$dir" ]]
+  then
+    ((i=i%N)); ((i++==0)) && wait
+    do_the_job "$dir" &
+  else
+    echo "exclude $dir"
+  fi
+done
+
+exit 0
